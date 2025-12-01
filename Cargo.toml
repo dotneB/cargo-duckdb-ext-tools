@@ -1,6 +1,6 @@
 [package]
 name = "cargo-duckdb-ext-tools"
-version = "0.3.0"
+version = "0.4.0"
 edition = "2024"
 authors = ["Zhang, Zepeng <redraiment@gmail.com>"]
 description = "A cargo subcommand that packages DuckDB extensions by appending the required extension metadata to a compiled dynamic library."

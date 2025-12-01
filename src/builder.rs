@@ -102,6 +102,7 @@ impl BuilderOptions {
         if let Some(manifest_path) = self.manifest_path.as_ref() {
             command.manifest_path(manifest_path);
         }
+        command.verbose(!self.quiet);
         Ok(command.exec()?)
     }
 }
@@ -262,7 +263,7 @@ impl Builder {
     /// the extension to `.duckdb_extension`.
     fn artifact_extension_path(&self, filename: &Utf8PathBuf, package_name: &str) -> String {
         let mut path = filename.clone();
-        path.set_file_name(package_name);
+        path.set_file_name(package_name.replace('-', "_"));
         path.set_extension("duckdb_extension");
         path.to_string()
     }
