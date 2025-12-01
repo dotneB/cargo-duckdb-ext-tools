@@ -1,0 +1,37 @@
+[package]
+name = "cargo-duckdb-ext-tools"
+version = "0.3.0"
+edition = "2024"
+authors = ["Zhang, Zepeng <redraiment@gmail.com>"]
+description = "A cargo subcommand that packages DuckDB extensions by appending the required extension metadata to a compiled dynamic library."
+license = "MIT"
+readme = "README.md"
+repository = "https://github.com/redraiment/cargo-duckdb-ext-tools"
+keywords = ["cargo-subcommand", "duckdb", "extension", "metadata", "packager"]
+categories = ["development-tools::cargo-plugins", "database", "command-line-utilities"]
+include = [
+    "src/**/*",
+    "Cargo.toml",
+    "README.md",
+    "README.zh.md"
+]
+
+[[bin]]
+name = "cargo-duckdb-ext-build"
+path = "src/main.rs"
+
+[[bin]]
+name = "cargo-duckdb-ext-pack"
+path = "src/main.rs"
+
+[profile.release]
+lto = true
+strip = true
+
+[dependencies]
+anyhow = "1.0.100"
+cargo_metadata = "0.23.1"
+clap = { version = "4.5.53", features = ["derive"] }
+serde_json = "1.0.145"
+target-lexicon = "0.13.3"
+thiserror = "2.0.17"
