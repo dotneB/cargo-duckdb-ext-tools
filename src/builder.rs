@@ -175,6 +175,21 @@ impl TryFrom<BuilderOptions> for Builder {
     }
 }
 
+/// Normalizes Windows paths by stripping extended-length device path prefix
+///
+/// On Windows, canonicalize_utf8() returns paths with \\?\ prefix for extended-length
+/// paths. This prefix causes path comparison issues when checking if artifacts
+/// are within the target directory.
+#[inline]
+fn normalize_windows_path(path: &str) -> String {
+    if cfg!(windows) {
+        if let Some(stripped) = path.strip_prefix("\\\\?\\") {
+            return stripped.to_owned();
+        }
+    }
+    path.to_owned()
+}
+
 impl Builder {
     /// Executes the build process and creates Packer instances for each artifact
     ///
@@ -217,12 +232,27 @@ impl Builder {
     /// This processes each filename in the artifact, filtering for valid
     /// dynamic library files within the target directory.
     fn packs(&self, package: &Package, artifact: &Artifact) -> Vec<Result<Packer, ToolsError>> {
+        let target_dir_normalized = normalize_windows_path(self.target_directory.as_str());
+        
         artifact.filenames
             .iter()
-            .filter_map(|filename| filename.canonicalize_utf8().ok())
-            .filter(|filename| filename.starts_with(&self.target_directory))
+            .filter_map(|filename| {
+                filename.canonicalize_utf8()
+                    .ok()
+                    .and_then(|canonical| {
+                        let filename_normalized = normalize_windows_path(canonical.as_str());
+                        // Only process files with dynamic library extensions
+                        let is_dylib = [".dll", ".so", ".dylib"]
+                            .iter()
+                            .any(|ext| filename_normalized.ends_with(ext));
+                        
+                        (filename_normalized.starts_with(&target_dir_normalized) && is_dylib)
+                            .then(|| Utf8PathBuf::from_str(&filename_normalized).ok())
+                            .flatten()
+                    })
+            })
             .map(|filename| self.pack(&package.name, &package.version, &filename))
-            .collect::<Vec<_>>()
+            .collect()
     }
 
     /// Creates a Packer instance for a specific library file

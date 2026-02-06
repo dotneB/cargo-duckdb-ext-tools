@@ -41,10 +41,17 @@ impl Task {
         }
         arguments.extend(iterator);
         if let Some(program) = arguments.get(0) {
-            if program.ends_with("duckdb-ext-build") {
+            let program_base = std::path::Path::new(program)
+                .file_name()
+                .and_then(|name| name.to_str())
+                .unwrap_or(program)
+                .strip_suffix(".exe")
+                .unwrap_or(program);
+                
+            if program_base.ends_with("duckdb-ext-build") {
                 return Task::Build(arguments);
             }
-            if program.ends_with("duckdb-ext-pack") {
+            if program_base.ends_with("duckdb-ext-pack") {
                 return Task::Pack(arguments);
             }
         }
